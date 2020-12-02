@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pytest
 
 from jina import Flow, Document
 
@@ -17,20 +18,23 @@ def get_index_flow():
     return f
 
 
-def get_flow():
+def get_search_flow():
     num_shards = 2
     f = Flow() \
         .add(
         uses='vectorindexer.yml',
         shards=num_shards,
         separated_workspace=True,
-        uses_after='merge_all_exec.yml',
+        uses_after='_merge_all',
         polling='all',
         timeout_ready='-1'
     )
     return f
 
 
+# required because we don't know the order of the pod returning
+# and, when the test failed, we still some time didn't see the error
+@pytest.mark.parametrize('execution_number', range(10))
 def test_sharding_empty_index(tmpdir, execution_number):
     print(f'WORKSPACE = {tmpdir}')
     os.environ['JINA_TEST_1229_WORKSPACE'] = os.path.abspath(tmpdir)
@@ -50,7 +54,7 @@ def test_sharding_empty_index(tmpdir, execution_number):
 
     f.close()
 
-    f = get_flow()
+    f = get_search_flow()
 
     num_query = 10
     query = []
