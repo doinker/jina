@@ -1,0 +1,13 @@
+!BaseExecutor
+with: {}
+metas:
+  name: merge
+requests:
+  on:
+    [SearchRequest, TrainRequest, IndexRequest]:
+      - !ReduceAllDriver {}
+      - !LogInfoDriver
+        with:
+          key: envelope
+    ControlRequest:
+      - !ControlReqDriver {}

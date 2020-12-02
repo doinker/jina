@@ -1,10 +1,20 @@
 import os
-
 import numpy as np
 
 from jina import Flow, Document
 
 callback_was_called = False
+
+
+def get_index_flow():
+    num_shards = 2
+    f = Flow() \
+        .add(
+        uses='vectorindexer.yml',
+        shards=num_shards,
+        separated_workspace=True,
+    )
+    return f
 
 
 def get_flow():
@@ -14,17 +24,18 @@ def get_flow():
         uses='vectorindexer.yml',
         shards=num_shards,
         separated_workspace=True,
-        uses_after='_merge_all',
-        polling='all'
+        uses_after='merge_all_exec.yml',
+        polling='all',
+        timeout_ready='-1'
     )
     return f
 
 
-def test_sharding_empty_index(tmpdir):
+def test_sharding_empty_index(tmpdir, execution_number):
     print(f'WORKSPACE = {tmpdir}')
     os.environ['JINA_TEST_1229_WORKSPACE'] = os.path.abspath(tmpdir)
 
-    f = get_flow()
+    f = get_index_flow()
 
     num_docs = 1
     data = []
